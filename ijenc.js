@@ -6,21 +6,52 @@ const char_table =
 	"@ABCDEFGHIJKLMNO" +
 	"PQRSTUVWXYZ[\\]^_" +
 	"`abcdefghijklmno" +
-	"pqrstuvwxyz{|}~ " +
+	"pqrstuvwxyz{|}~\x7f" +
 	"　▘▝▀▖▌▞▛▗▚▐▜▄▙▟█" +
 	"・━┃╋┫┣┻┳┏┓┗┛◤◥◣◢" +
 	"¥｡｢｣､･ｦｧｨｩｪｫｬｭｮｯ" +
 	"ｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿ" +
 	"ﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏ" +
-	"ﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝﾞﾟ" /*+
-	"←→↑↓♠♥♣♦⚫⚪🔟🍙🐱👾♪🌀" +
-	"🚀🛸⌇🚁💥💰🧰📶🚪🕴🕺💃🏌🏃🚶🍓"*/;
+	"ﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝﾞﾟ" +
+	"←→↑↓♠♥♣♦⚫⚪十飯獣宇♪渦" +
+	"飛盤⌇留爆弗箱階扉前大右括左弧苺";
+
+const emoji_escape_table = [
+	["🔟","十"],["🍙","飯"],["🐱","獣"],["👾","宇"],["🌀","渦"],
+	["🚀","飛"],["🛸","盤"],["🚁","留"],["💥","爆"],["💰","弗"],
+	["🧰","箱"],["📶","階"],["🚪","扉"],["🕴","前"],["🕺","大"],
+	["💃","右"],["🏌","括"],["🏃","左"],["🚶","弧"],["🍓","苺"]
+];
+
+const emoji_inv_table = (function(t) {
+	const ret = {};
+	for (let i = 0; i < t.length; i++) {
+		ret[t[i][1]] = t[i][0];
+	}
+	return ret;
+})(emoji_escape_table);
 
 function encode_string(str) {
-	const result = [];
 	let ok = true;
 	let ng_chars = "";
 	const ng_set = {};
+
+	for (let i = 0; i < str.length; i++) {
+		const c = str.charAt(i);
+		if (c in emoji_inv_table) {
+			if (!(c in ng_set)) {
+				ng_chars += c;
+				ng_set[c] = true;
+			}
+			ok = false;
+		}
+	}
+	for (let i = 0; i < emoji_escape_table.length; i++) {
+		let e = emoji_escape_table[i][0], t = emoji_escape_table[i][1];
+		while (str.indexOf(e) >= 0) str = str.replace(e, t);
+	}
+
+	const result = [];
 	for (let i = 0; i < str.length; i++) {
 		const c = str.charAt(i);
 		if (c.charCodeAt(0) < 0x20) {
@@ -51,7 +82,8 @@ function decode_string(data) {
 		} else if (c < 0x20) {
 			result += String.fromCharCode(c);
 		} else {
-			result += char_table.charAt(c - 0x20);
+			const rc = char_table.charAt(c - 0x20);
+			result += rc in emoji_inv_table ? emoji_inv_table[rc] : rc;
 		}
 	}
 	return {"ok": ok, "result": result};
