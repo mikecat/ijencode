@@ -1,6 +1,8 @@
 IJencode
 ========
 
+[IJencode 実行用ページ](https://github.com/mikecat/ijencode)
+
 ## 概要
 
 文字列を[IchigoJam](https://ichigojam.net/)での表示用にエンコードする。
